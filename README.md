@@ -9,15 +9,27 @@ Lets OpenSSL 3 providers ship as wasm components instead of
 `.so`/`.dll` files. openssl-wasm imports this world; provider
 components export it.
 
-Status: **Phase 1a** (keymgmt + signature + shared types).
-`pkey/pkey.wit` ships the shared `OSSL_PARAM` model, `key-selection`
-flags, `pkey-error` variant, and the four resource handles
-(`provider-context`, `keydata`, `gen-context`, `signature-context`,
-`asym-cipher-context`). `keymgmt/keymgmt.wit` mirrors all 25 funcs of
-`OSSL_OP_KEYMGMT` (function IDs documented inline). `signature/
-signature.wit` mirrors the streaming OSSL_OP_SIGNATURE surface (the
-3.2+ one-shot sign-message family is deferred to Phase 8). Phase 1b
-adds `provider/provider.wit` entry point + `asym-cipher/asym-cipher.wit`.
+Status: **Phase 1b complete** — Layer-1 surface is sufficient for TLS
+1.2 + 1.3 server-side and client-cert auth.
+
+- `pkey/pkey.wit` — shared types: `OSSL_PARAM` variant, key-selection
+  flags, `pkey-error` (with `insufficient-buffer(u64)`), `operation`
+  enum (replaces raw `s32` for OSSL_OP_*), four resource handles
+  (`keydata`, `gen-context`, `signature-context`, `asym-cipher-context`).
+- `keymgmt/keymgmt.wit` — all 25 OSSL_FUNC_KEYMGMT_* mapped.
+- `signature/signature.wit` — OSSL_FUNC_SIGNATURE_* IDs 1–26. The
+  3.2+ one-shot sign-message family (27–32) is deferred to Phase 8.
+- `asym-cipher/asym-cipher.wit` — all 11 OSSL_FUNC_ASYM_CIPHER_* mapped.
+- `provider/provider.wit` — OSSL_FUNC_PROVIDER_* IDs 1024–1032 (the
+  "provider-implements" side). Reverse-direction "core-provided" funcs
+  (IDs 105–120+) are not in this WIT — they live on the openssl-wasm
+  side as Phase 2 callback-direction work.
+- `worlds/provider-abi.wit` exports all five interfaces.
+
+Generated surface: 812 lines of C; 36 keymgmt + 34 signature + 19
+asym-cipher + 23 provider + 8 pkey exported funcs.
+
+Phase 2 (`openssl-wasm` loader patch) is the next milestone.
 
 See `~/git/python-wasm/plans/openssl-provider-wit.md` for the
 architecture and 13-phase implementation plan, and
@@ -28,11 +40,12 @@ Layout
 
 ```
 pkey/pkey.wit                 shared types: OSSL_PARAM variant, key-selection
-                              flags, pkey-error variant, opaque resources
-provider/provider.wit         OSSL_PROVIDER entry point (Phase 1b placeholder)
-keymgmt/keymgmt.wit           OSSL_OP_KEYMGMT (~25 funcs, Phase 1a)
-signature/signature.wit       OSSL_OP_SIGNATURE (~20 funcs, Phase 1a)
-asym-cipher/asym-cipher.wit   OSSL_OP_ASYM_CIPHER (Phase 1b placeholder)
+                              flags, pkey-error variant, operation enum,
+                              opaque resource handles
+provider/provider.wit         OSSL_PROVIDER entry point (Phase 1b)
+keymgmt/keymgmt.wit           OSSL_OP_KEYMGMT (Phase 1a, 25 funcs)
+signature/signature.wit       OSSL_OP_SIGNATURE (Phase 1a, IDs 1-26)
+asym-cipher/asym-cipher.wit   OSSL_OP_ASYM_CIPHER (Phase 1b, 11 funcs)
 worlds/provider-abi.wit       the Layer-1 contract (combines all)
 docs/architecture.md          design overview
 scripts/check-wit.sh          resolve + wit-bindgen c + wasi-sdk clang compile

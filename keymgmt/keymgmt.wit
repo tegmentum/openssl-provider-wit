@@ -42,17 +42,16 @@
 //    wires the actual `OSSL_CALLBACK *` and walks the outer list.
 //
 // The OPERATION_ID in `query_operation_name` is OpenSSL's operation
-// enum (OSSL_OP_SIGNATURE = 12, OSSL_OP_KEYEXCH = 11, etc.). We pass
-// it through as `s32` -- this is the one place we leak a raw int
-// from the C ABI; mapping each id to a WIT enum would force lockstep
-// updates whenever OpenSSL adds operations. The Layer-2 adapter is
-// the one that ever looks at this; not worth the churn.
+// enum (OSSL_OP_SIGNATURE, OSSL_OP_KEYEXCH, ...). We use the typed
+// `operation` enum from pkey rather than a raw s32 -- the
+// translation table lives in pkey and only needs touching when
+// OpenSSL adds an operation class.
 
 package openssl:keymgmt@0.1.0;
 
 interface keymgmt {
   use openssl:pkey/pkey@0.1.0.{
-    keydata, provider-context, gen-context,
+    keydata, gen-context, operation,
     ossl-param, ossl-param-descriptor,
     key-selection, validation-level, pkey-error,
   };
@@ -62,8 +61,7 @@ interface keymgmt {
   //
   // Returns the keymgmt algorithm name (e.g. "RSA", "EC") this
   // keymgmt should be advertised under, given the operation kind.
-  // operation-id is OpenSSL's OSSL_OP_* int (see comment above).
-  query-operation-name: func(operation-id: s32) -> option<string>;
+  query-operation-name: func(op: operation) -> option<string>;
 
   // -------------------------------------------------------------------
   // Static-key params (OSSL_FUNC_KEYMGMT_GETTABLE_PARAMS  = 12,

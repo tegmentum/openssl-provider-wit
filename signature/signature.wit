@@ -52,7 +52,7 @@ package openssl:signature@0.1.0;
 
 interface signature {
   use openssl:pkey/pkey@0.1.0.{
-    keydata, provider-context, signature-context,
+    keydata, signature-context,
     ossl-param, ossl-param-descriptor,
     pkey-error,
   };

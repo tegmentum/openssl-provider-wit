@@ -120,6 +120,39 @@ interface pkey {
   }
 
   // -------------------------------------------------------------------
+  // Operation classes
+  // -------------------------------------------------------------------
+  //
+  // From core_dispatch.h's OSSL_OP_* table:
+  //   DIGEST=1 CIPHER=2 MAC=3 KDF=4 RAND=5 KEYMGMT=10 KEYEXCH=11
+  //   SIGNATURE=12 ASYM_CIPHER=13 KEM=14 SKEYMGMT=15 ENCODER=20
+  //   DECODER=21 STORE=22
+  //
+  // Used by keymgmt.query-operation-name and provider.query-operation
+  // /.unquery-operation. The C ABI uses raw `int`; we type it as a
+  // closed enum and accept the migration cost of adding a variant when
+  // OpenSSL adds operations -- the alternative (raw s32) was rejected
+  // because every caller would need a parallel translation table.
+  // OSSL_OP_SKEYMGMT (3.4+) is included even though we don't expose
+  // an skeymgmt interface yet -- it's part of the ABI.
+  enum operation {
+    digest,
+    cipher,
+    mac,
+    kdf,
+    rand,
+    keymgmt,
+    keyexch,
+    signature,
+    asym-cipher,
+    kem,
+    skeymgmt,
+    encoder,
+    decoder,
+    store,
+  }
+
+  // -------------------------------------------------------------------
   // Resources
   // -------------------------------------------------------------------
   //
@@ -129,12 +162,13 @@ interface pkey {
   // resource-drop is the canonical destructor; the keymgmt_free /
   // signature_freectx / etc. funcs are NOT separately exported --
   // they collapse into the resource drop).
-
-  // Provider per-instance state. `query-operation` returns it; the
-  // adapter holds it and passes it to every other call as the first
-  // arg in the C ABI. In WIT we model it as a constructor on the
-  // provider resource itself (see openssl:provider/provider).
-  resource provider-context;
+  //
+  // The C `void *provctx` does NOT get a WIT resource. WIT's
+  // component model already gives each provider its own instance, so
+  // the provider's internal state is implicit -- every method on
+  // every interface a provider exports runs in that provider's
+  // context automatically. (If a future use case needs multiple
+  // provctx handles per component we add a resource then.)
 
   // Key material handle. Returned by keymgmt.new, .gen, .load,
   // .dup, .import; consumed by signature.sign-init / verify-init,
@@ -146,10 +180,12 @@ interface pkey {
   resource gen-context;
 
   // Per-sign-or-verify-operation context. Created by
-  // signature.newctx, consumed by sign / verify.
+  // signature.signature-context.constructor, consumed by sign /
+  // verify.
   resource signature-context;
 
   // Per-encrypt-or-decrypt-operation context for RSA / similar.
-  // Created by asym-cipher.newctx, consumed by encrypt / decrypt.
+  // Created by asym-cipher.asym-cipher-context.constructor, consumed
+  // by encrypt / decrypt.
   resource asym-cipher-context;
 }
