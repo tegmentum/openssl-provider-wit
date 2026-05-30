@@ -1,5 +1,6 @@
 package openssl:provider-abi@0.1.0;
 
+use openssl:pkey/pkey@0.1.0;
 use openssl:provider/provider@0.1.0;
 use openssl:keymgmt/keymgmt@0.1.0;
 use openssl:signature/signature@0.1.0;
@@ -9,13 +10,18 @@ use openssl:asym-cipher/asym-cipher@0.1.0;
 // openssl-wasm as a provider exports this world. openssl-wasm imports
 // it.
 //
-// Phase 0 ships the four interfaces empty so the world resolves;
-// Phases 1a / 1b populate them with the real OpenSSL 3 surface.
+// `openssl:pkey/pkey` holds the shared types (OSSL_PARAM, key-
+// selection, errors, resources) that keymgmt / signature / asym-cipher
+// all reference. It is exported alongside them so consumers can talk
+// about the resource handles directly.
 //
-// Backfill (Phase 8) adds: key-exchange, kdf, mac, digest, cipher, kem,
-// rand, encoder, decoder, store. Each becomes a sibling interface +
-// `use` line here.
+// Phase 1a populates `pkey`, `keymgmt`, `signature` with the real
+// OpenSSL 3 surface. Phase 1b fills `provider` (entry point) and
+// `asym-cipher`. Backfill (Phase 8) adds: key-exchange, kdf, mac,
+// digest, cipher, kem, rand, encoder, decoder, store -- each becomes
+// a sibling interface + `use` line here.
 world provider-abi {
+  export pkey;
   export provider;
   export keymgmt;
   export signature;
