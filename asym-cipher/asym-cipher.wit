@@ -1,0 +1,13 @@
+// OpenSSL 3 OSSL_OP_ASYM_CIPHER mirror. Methods correspond to the
+// OSSL_FUNC_asym_cipher_* entries from <openssl/core_dispatch.h>.
+//
+// PHASE 0: placeholder. Phase 1b fills in ~10 funcs (newctx, freectx,
+// dupctx, encrypt-init, encrypt, decrypt-init, decrypt,
+// get-ctx-params, gettable-ctx-params, set-ctx-params,
+// settable-ctx-params).
+
+package openssl:asym-cipher@0.1.0;
+
+interface asym-cipher {
+  // Phase 0 placeholder. See plans/openssl-provider-wit.md Phase 1b.
+}

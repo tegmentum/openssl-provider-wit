@@ -1,0 +1,16 @@
+// OpenSSL 3 OSSL_OP_KEYMGMT mirror. Functions a provider implements
+// to advertise + manage opaque key objects (the "keydata" in OpenSSL
+// parlance). Methods correspond to the OSSL_FUNC_keymgmt_* entries
+// dispatched from <openssl/core_dispatch.h>.
+//
+// PHASE 0: placeholder. Phase 1a fills in ~25 funcs (new, free, gen,
+// gen-init, gen-set-params, gen-set-template, gen-settable-params,
+// gen-cleanup, load, query-operation-name, has, validate, match,
+// import, import-types, export, export-types, get-params,
+// gettable-params, set-params, settable-params, dup, ...).
+
+package openssl:keymgmt@0.1.0;
+
+interface keymgmt {
+  // Phase 0 placeholder. See plans/openssl-provider-wit.md Phase 1a.
+}

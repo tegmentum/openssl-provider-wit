@@ -1,0 +1,23 @@
+package openssl:provider-abi@0.1.0;
+
+use openssl:provider/provider@0.1.0;
+use openssl:keymgmt/keymgmt@0.1.0;
+use openssl:signature/signature@0.1.0;
+use openssl:asym-cipher/asym-cipher@0.1.0;
+
+// The Layer-1 contract: a wasm component that wants to plug into
+// openssl-wasm as a provider exports this world. openssl-wasm imports
+// it.
+//
+// Phase 0 ships the four interfaces empty so the world resolves;
+// Phases 1a / 1b populate them with the real OpenSSL 3 surface.
+//
+// Backfill (Phase 8) adds: key-exchange, kdf, mac, digest, cipher, kem,
+// rand, encoder, decoder, store. Each becomes a sibling interface +
+// `use` line here.
+world provider-abi {
+  export provider;
+  export keymgmt;
+  export signature;
+  export asym-cipher;
+}

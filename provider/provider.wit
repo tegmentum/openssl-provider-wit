@@ -1,0 +1,25 @@
+// OpenSSL 3 provider entry-point types. Mirrors `OSSL_PROVIDER`,
+// `OSSL_DISPATCH`, `OSSL_ALGORITHM`, `OSSL_PARAM`, and the
+// `OSSL_FUNC_provider_*` family from `<openssl/core_dispatch.h>` and
+// `<openssl/core.h>`.
+//
+// PHASE 0: this is a placeholder. The full surface lands in Phase 1b
+// (see plans/openssl-provider-wit.md in python-wasm). Held empty in
+// Phase 0 so wit-bindgen-c can verify the package parses and resolves.
+
+package openssl:provider@0.1.0;
+
+interface provider {
+  // Phase 0 placeholder. Phase 1b will define:
+  //
+  //   variant ossl-param-value { ... }    // utf8-string, octet-string, int, uint, ...
+  //   record ossl-param { key: string, value: ossl-param-value }
+  //   record ossl-algorithm { algorithm-names: string, property-definition: string, ... }
+  //   variant operation { keymgmt, signature, asym-cipher, key-exchange, kdf, ... }
+  //   resource provider {
+  //     constructor()
+  //     query-operation: func(op: operation) -> list<ossl-algorithm>
+  //     teardown: func()
+  //     get-params: func() -> list<ossl-param>
+  //   }
+}

@@ -1,0 +1,15 @@
+name: check-wit
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check-wit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install wit-bindgen
+        run: cargo install --locked wit-bindgen-cli
+      - name: validate WIT packages
+        run: bash scripts/check-wit.sh

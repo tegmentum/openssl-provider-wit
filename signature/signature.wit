@@ -1,0 +1,16 @@
+// OpenSSL 3 OSSL_OP_SIGNATURE mirror. Methods correspond to the
+// OSSL_FUNC_signature_* entries from <openssl/core_dispatch.h>.
+//
+// PHASE 0: placeholder. Phase 1a fills in ~20 funcs (newctx, freectx,
+// dupctx, sign-init, sign, verify-init, verify, verify-recover-init,
+// verify-recover, digest-sign-init, digest-sign-update,
+// digest-sign-final, digest-sign, digest-verify-init,
+// digest-verify-update, digest-verify-final, digest-verify,
+// get-ctx-params, gettable-ctx-params, set-ctx-params,
+// settable-ctx-params, get-ctx-md-params, set-ctx-md-params, ...).
+
+package openssl:signature@0.1.0;
+
+interface signature {
+  // Phase 0 placeholder. See plans/openssl-provider-wit.md Phase 1a.
+}
