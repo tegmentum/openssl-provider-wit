@@ -17,7 +17,7 @@ cd "$(dirname "$0")/.."
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
-for iface in pkey provider keymgmt signature asym-cipher; do
+for iface in pkey provider keymgmt signature asym-cipher store; do
   mkdir -p "$STAGE/wit/deps/$iface"
   cp "$iface/$iface.wit" "$STAGE/wit/deps/$iface/"
 done
