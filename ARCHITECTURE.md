@@ -45,6 +45,9 @@ This document is the entry point for understanding how the seven repos in the op
 │                                                                        │
 │  pkcs11-provider + softhsm     pkcs11-gateway-adapter                  │
 │  (native / wasmtime)           (browser → ws-gateway → host pkcs11js)  │
+│                                                                        │
+│  pkcs11-webauthn-adapter       pkcs11-webcrypto-adapter                │
+│  (subset — WebAuthn assertion) (broad — SubtleCrypto + IndexedDB)      │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -59,6 +62,8 @@ This document is the entry point for understanding how the seven repos in the op
 | **[pkcs11-bridge](https://github.com/tegmentum/pkcs11-bridge)** | Rust → wasm | Layer-3 key backend. Exports `tegmentum:key-backend`, imports `pkcs11:host`. |
 | **[pkcs11-gateway-adapter](https://github.com/tegmentum/pkcs11-gateway-adapter)** | Rust → wasm | Layer-4 browser-side. Exports `pkcs11:host` via WebSocket tunnel. |
 | **[ws-gateway-server](https://github.com/tegmentum/ws-gateway-server)** | Node npm | Reference KSW1 WebSocket server — bridges browser tunnel to host pkcs11js. |
+| **[pkcs11-webauthn-adapter](https://github.com/tegmentum/pkcs11-webauthn-adapter)** | Rust → wasm | Layer-4 alternative. Exports a `pkcs11:host` subset backed by `navigator.credentials.*`. |
+| **[pkcs11-webcrypto-adapter](https://github.com/tegmentum/pkcs11-webcrypto-adapter)** | Rust → wasm | Layer-4 alternative. Exports a broader `pkcs11:host` subset backed by `crypto.subtle.*` + IndexedDB. |
 
 ## Composition recipes
 
@@ -126,6 +131,36 @@ openssl-wasm
 ```
 
 Useful for dev environments / demos where you don't want to operate an HSM. Either route through pkcs11-bridge against a wasm-resident SoftHSM (recipe 2 minus the gateway), or write a `software-bridge` Layer-3 implementation that stores key bytes in IndexedDB.
+
+### Recipe 5 — Browser TLS with WebAuthn-registered credentials
+
+```
+openssl-wasm
+  + simple-provider-adapter
+  + pkcs11-bridge
+  + pkcs11-store-adapter
+  + pkcs11-webauthn-adapter      (Layer 4 — replaces pkcs11-provider+softhsm)
+  → composed.wasm  → jco transpile → browser bundle
+```
+
+No gateway server needed; the polyfill's `webauthn-bridge` plugin calls `navigator.credentials.{create,get}` directly. Best fit: "user signs with their personal YubiKey / Touch ID / Windows Hello." Subset only — no `decrypt` / `derive-key` / multipart. Registration happens out of band (separate /register page) by default; opt in to `generate-key-pair`-triggers-WebAuthn-register via polyfill option.
+
+**Manifest:** `WITH_PKCS11_WEBAUTHN=1 bash scripts/compose-python-component.sh`.
+
+### Recipe 6 — Browser TLS with SubtleCrypto + IndexedDB keys
+
+```
+openssl-wasm
+  + simple-provider-adapter
+  + pkcs11-bridge
+  + pkcs11-store-adapter
+  + pkcs11-webcrypto-adapter     (Layer 4 — replaces pkcs11-provider+softhsm)
+  → composed.wasm  → jco transpile → browser bundle
+```
+
+Broader coverage than recipe 5 because SubtleCrypto is a real key-management surface: sign / verify / encrypt / decrypt / generate-key / import-key. Keys live as non-extractable CryptoKey objects (default: IndexedDB-persistent; switchable to in-memory at compose time). Best fit: dev/test, ephemeral signing, software-protected keys without HSM dependency.
+
+**Manifest:** `WITH_PKCS11_WEBCRYPTO=1 bash scripts/compose-python-component.sh`.
 
 ## Key design decisions
 
