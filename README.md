@@ -9,8 +9,11 @@ Lets OpenSSL 3 providers ship as wasm components instead of
 `.so`/`.dll` files. openssl-wasm imports this world; provider
 components export it.
 
-Status: **Phase 1b complete** — Layer-1 surface is sufficient for TLS
-1.2 + 1.3 server-side and client-cert auth.
+Status: **Phase 1b + Phase 8 STORE complete** — Layer-1 surface is
+sufficient for TLS 1.2 / 1.3 server-side, client-cert auth, and
+`SSLContext.load_cert_chain('pkcs11:...')` via the STORE op
+end-to-end through a real HSM. See [ARCHITECTURE.md](ARCHITECTURE.md)
+for the full layered stack + composition recipes.
 
 - `pkey/pkey.wit` — shared types: `OSSL_PARAM` variant, key-selection
   flags, `pkey-error` (with `insufficient-buffer(u64)`), `operation`
@@ -85,10 +88,17 @@ of the affected interface (semver-minor for additions, semver-major
 for any signature change). Mismatched provider/host versions surface
 at link time, not at runtime.
 
-Related repos
--------------
+Related repos (the full openssl-wasm component stack)
+-----------------------------------------------------
 
-- `tegmentum:key-backend-wit`   Layer-3 narrow contract for typical backends
-- `pkcs11-wit`                  Layer-4 PKCS#11 (existing)
-- `pkcs11-wasm-host`            Layer-4 native pkcs11 on wasmtime (existing)
-- `openssl-wasm`                Layer-0 consumer; patched in Phase 2
+| Layer | Repo | Role |
+|---|---|---|
+| Layer 1 (spec) | [openssl-provider-wit](https://github.com/tegmentum/openssl-provider-wit) | This repo — WIT mirror of the OpenSSL 3 provider ABI |
+| Layer 0 (consumer) | [openssl-wasm](https://github.com/tegmentum/openssl-wasm) | OpenSSL 3 compiled to wasm; imports this WIT; bridges OSSL_OP_* to WIT calls |
+| Layer 2 (OSSL adapter) | [simple-provider-adapter](https://github.com/tegmentum/simple-provider-adapter) | Exports openssl:provider-abi, imports narrow tegmentum:key-backend |
+| Layer 2 (STORE backend) | [pkcs11-store-adapter](https://github.com/tegmentum/pkcs11-store-adapter) | Exports openssl:store/store, imports pkcs11:host. Resolves pkcs11: URIs to cert DER + key-references. |
+| Layer 3 (key backend) | [pkcs11-bridge](https://github.com/tegmentum/pkcs11-bridge) | Exports tegmentum:key-backend, imports pkcs11:host |
+| Layer 4 (browser) | [pkcs11-gateway-adapter](https://github.com/tegmentum/pkcs11-gateway-adapter) | Exports pkcs11:host via tegmentum:pkcs11-tunnel (WebSocket) |
+| Bridge (Node) | [ws-gateway-server](https://github.com/tegmentum/ws-gateway-server) | Reference Node server for the KSW1 WebSocket tunnel |
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for composition recipes.
