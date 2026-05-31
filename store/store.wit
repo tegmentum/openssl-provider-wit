@@ -97,6 +97,16 @@ interface store {
   // "subject", "issuer", "serial", "fingerprint", "alias", "properties".
   settable-ctx-params: func() -> list<ossl-param-descriptor>;
 
+  // OpenSSL discovers store loaders via OSSL_OP_STORE provider
+  // queries that return one OSSL_ALGORITHM per supported URI scheme.
+  // The C bridge in openssl-wasm needs this list at provider-query
+  // time, before any loader is opened.
+  //
+  // Empty result = the backend doesn't currently claim any URI scheme
+  // (perfectly valid — the provider then offers nothing for
+  // OSSL_OP_STORE and OpenSSL falls back to its built-in loaders).
+  supported-schemes: func() -> list<string>;
+
   // -------------------------------------------------------------------
   // Loader resource (one per opened URI; CLOSE = drop)
   // -------------------------------------------------------------------
